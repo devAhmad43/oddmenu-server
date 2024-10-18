@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const QRCode = require('qrcode');
 const Products = require("../../models/products");
 router.post("/createProduct", async (req, res) => {
   const { title, description, price, imageUrl, producttype, admin } =
@@ -21,7 +22,6 @@ router.post("/createProduct", async (req, res) => {
       .json({ message: "Internal server error", errors: error.message });
   }
 });
-
 router.get("/getProducts/:adminId", async (req, res) => {
   try {
     const { adminId } = req.params;  // Get the adminId from the request parameters
@@ -39,9 +39,8 @@ router.get("/getProducts/:adminId", async (req, res) => {
     if (!products.length) {
       return res.status(404).json({ message: "No products found for this admin" });
     }
-
     // Send the products in the response
-    res.status(200).json({ message: "Fetch products success", products });
+    res.status(200).json({ message: req.params.tableNo, products,});
   } catch (error) {
     console.error("Error fetching products:", error);
     res.status(500).json({ message: "Error fetching products" });
@@ -54,7 +53,6 @@ router.get("/getsingleProduct/:id", async (req, res) => {
     if (!finddata) {
       return res.status(400).json({ message: "product not found" });
     }
-
     res.status(200).json({ finddata, message: "data fetch successfully" });
   } catch (error) {
     res
@@ -91,6 +89,19 @@ router.put("/updateProduct/:id", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
+router.post('/generateQRCode', async (req, res) => {
+  const { admin, tableNumber } = req.body;
+  console.log("adminid-=======>",admin)
+  const url = `${process.env.CLIENT_URL}/shop/${admin}?table=${tableNumber}`;
+  try {
+    const qrCode = await QRCode.toDataURL(url);
+    res.status(200).json({ qrCode });
+  } catch (error) {
+    res.status(500).json({ message: 'QR Code generation failed', error });
+  }
+}
+);
 
 router.delete("/deleteProduct/:id", async (req, res) => {
   const { id } = req.params;
