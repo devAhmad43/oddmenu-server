@@ -40,7 +40,7 @@ router.get("/getProducts/:adminId", async (req, res) => {
       return res.status(404).json({ message: "No products found for this admin" });
     }
     // Send the products in the response
-    res.status(200).json({ message: req.params.tableNo, products,});
+    res.status(200).json({ message: req.params.tableNumber, products,});
   } catch (error) {
     console.error("Error fetching products:", error);
     res.status(500).json({ message: "Error fetching products" });
