@@ -1,40 +1,20 @@
 let mongoose = require('mongoose');
-let productdetail = mongoose.Schema({
-  productId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Equipmentproduct',
-  },
-  orderStatus: {
-    type: String
-  },
-  orderId: {
-    type: String
-  },
-  productprice: {
-    type: String
-  },
-  title: {
-    type: String,
-  },
-  power: {
-    type: String
-  },
-  machines: {
-    type: String
-  },
-  hostingfee: {
-    type: String
-  },
-});
 let orderSchema = mongoose.Schema({
   adminId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'AdminPanel',
-    required: true
   },
-  product: [productdetail],
+  product: [{
+    productId: {
+      type: mongoose.Schema.Types.ObjectId, // Reference to Product collection
+      ref: 'Product',
+    },
+  }],
   noofitems: {
     type: String,
+  },
+  table:{
+    type:Number
   },
   price: {
     type: String,

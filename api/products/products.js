@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const QRCode = require('qrcode');
 const Products = require("../../models/products");
+
 router.post("/createProduct", async (req, res) => {
   const { title, description, price, imageUrl, producttype, admin } =
     req.body;
@@ -89,19 +89,6 @@ router.put("/updateProduct/:id", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
-
-router.post('/generateQRCode', async (req, res) => {
-  const { admin, tableNumber } = req.body;
-  console.log("adminid-=======>",admin)
-  const url = `${process.env.CLIENT_URL}/shop/${admin}?table=${tableNumber}`;
-  try {
-    const qrCode = await QRCode.toDataURL(url);
-    res.status(200).json({ qrCode });
-  } catch (error) {
-    res.status(500).json({ message: 'QR Code generation failed', error });
-  }
-}
-);
 
 router.delete("/deleteProduct/:id", async (req, res) => {
   const { id } = req.params;

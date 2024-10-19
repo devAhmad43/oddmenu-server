@@ -4,35 +4,33 @@ const FoodOrder = require("../../models/orders");
 const Product = require("../../models/products");
 ///////////////////// /api/order/foodorder/////////////////////
 router.post("/productorder", async (req, res) => {
-  const { userId, product, price, noofitems, status } = req.body;
+  const { adminId, product, price, noofitems, table, status } = req.body;
+  console.log(req.body,"ordersssss")
   try {
-    const item = new FoodOrder({
-      userId: userId,
-      product: product,
+    const order = new FoodOrder({
+      adminId: adminId, // Admin ID from the request
+      noofitems: noofitems,
       price: price,
+      table: table, // Table number from the request
       status: status,
-      noofitems,
+      product:product // Status field from the request
     });
-    product.map(async (item) => {
-      console.log(item.productId);
-      let data = await Product.findOne({ _id: item.productId });
-      data.machines = data.machines - item.machines;
-      if (data.machines === 0) {
-        data.status = true;
-      }
-      await data.save();
-    });
-    await item.save();
+    // Loop through the product array to update the machines for each product and associate with the order
+    // Save the new order with the associated product data
+    await order.save();
 
-    res.status(200).json({ message: "payment successfully", item });
+    res.status(200).json({ message: "Order successfully placed", order });
   } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error", error });
   }
 });
+
 ///////////////////// /api/order/getallorder /////////////////////
-router.get("/getallorder", async (req, res) => {
+router.get("/getallorder/:id", async (req, res) => {
   try {
-    const data = await FoodOrder.find();
+    const {id} = req.params;
+    console.log("get api admin",id)
+    const data = await FoodOrder.find({adminId:id});
     if (!data) {
       res.status(404).json({ message: "order not found" });
     }
@@ -66,7 +64,6 @@ router.put("/updatestatus/:id", async (req, res) => {
     }
     item.status = status;
     await item.save();
-
     res.status(200).json({ message: "Status update successfully", item });
   } catch (error) {
     res.status(500).json({ message: "Internal server error", error });
