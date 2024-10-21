@@ -13,7 +13,7 @@ let orderSchema = mongoose.Schema({
   noofitems: {
     type: String,
   },
-  table:{
+  tableNumber:{
     type:Number
   },
   price: {

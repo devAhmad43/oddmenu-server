@@ -11,7 +11,7 @@ router.post("/productorder", async (req, res) => {
       adminId: adminId, // Admin ID from the request
       noofitems: noofitems,
       price: price,
-      table: table, // Table number from the request
+      tableNumber: table, // Table number from the request
       status: status,
       product:product // Status field from the request
     });
