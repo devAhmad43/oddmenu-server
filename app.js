@@ -13,7 +13,6 @@ const adminRouter = require('./api/admin/admin');
 const productRouter = require('./api/products/products');
 const orders = require('./api/order/order')
 const qrCode=require('./api/qr/qrCode')
-
 const session = require('express-session');
 const uri = process.env.Mongoo_URI;
 const cookieParser = require('cookie-parser');
