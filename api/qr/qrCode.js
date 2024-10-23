@@ -38,5 +38,24 @@ router.get('/getQRCode/:adminId', async (req, res) => {
     res.status(500).json({ message: 'Failed to retrieve QR Codes', error });
   }
 });
+// DELETE route to delete a specific QR Code by adminId and tableNumber
+router.delete('/deleteQRCode/:adminId/:tableNumber', async (req, res) => {
+  const { adminId, tableNumber } = req.params; // Get adminId and tableNumber from request parameters
+  try {
+    // Find and delete the QR Code document based on adminId and tableNumber
+    const deletedQRCode = await QRCodeModel.findOneAndDelete({ adminId: adminId, tableNumber: tableNumber });
+
+    if (!deletedQRCode) {
+      return res.status(404).json({ message: 'QR Code not found' });
+    }
+
+    // If the deletion was successful, send a success message
+    res.status(200).json({ message: 'QR Code deleted successfully' });
+  } catch (error) {
+    console.error('Failed to delete QR Code:', error);
+    res.status(500).json({ message: 'Failed to delete QR Code', error });
+  }
+});
+
 
 module.exports = router;
