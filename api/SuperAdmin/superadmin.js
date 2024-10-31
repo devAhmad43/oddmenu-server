@@ -12,25 +12,41 @@ const secretIDSuperAdmin = process.env.secret_ID_SuperAdmin;
 router.post("/signup", async (req, res) => {
   const { email, password } = req.body;
   try {
-    const existingSuperAdmin = await AdminPanel.findOne({ adminemail: email, role: 'superadmin' });
+    // Check if a super admin with the same email already exists
+    const existingSuperAdmin = await AdminPanel.findOne({ adminemail: email, role: "superadmin" });
     if (existingSuperAdmin) {
       return res.status(401).json({ message: "Super Admin already exists" });
     }
+
+    // Hash the password and create a new super admin record
     const hashedPassword = await bcrypt.hash(password, 10);
     const newSuperAdmin = new AdminPanel({
       adminemail: email,
       password: hashedPassword,
-      role: 'superadmin',
-      isverified: true
+      role: "superadmin",
+      isverified: true,
     });
-    const userToken = jwt.sign(
-      { id: newSuperAdmin._id, role: 'superadmin' },
+
+    // Generate a JWT token for the new super admin
+    jwt.sign(
+      { id: newSuperAdmin._id, role: "superadmin" },
       secretIDSuperAdmin,
-      { expiresIn: 60*60*12 }
+      { expiresIn: "12h" }, // Token expiration time
+      async (err, userToken) => {
+        if (err) {
+          console.error("Error generating token:", err);
+          return res.status(500).json({ message: "Failed to generate token" });
+        }
+
+        // Set session expiration and save the token in the super admin's record
+        newSuperAdmin.sessionExpiration = new Date().getTime() + 12 * 60 * 60 * 1000;
+        newSuperAdmin.jwtadmintoken = userToken;
+        await newSuperAdmin.save();
+
+        // Respond with success message and new super admin details
+        res.status(200).json({ message: "Super Admin successfully signed up", superadmin: newSuperAdmin });
+      }
     );
-    newSuperAdmin.jwtadmintoken = userToken;
-    await newSuperAdmin.save();
-    res.status(200).json({ message: "Super Admin successfully signed up",  newSuperAdmin });
   } catch (error) {
     res.status(500).json({
       message: "Failed to sign up Super Admin",
@@ -59,7 +75,6 @@ router.post("/login", async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ message: "Incorrect password" });
     }
-
     // Generate a JWT token for the super admin
     jwt.sign(
       { id: superAdmin._id, role: "superadmin" }, // Add role to the token payload
@@ -70,12 +85,10 @@ router.post("/login", async (req, res) => {
           console.log("error", err);
           return res.status(500).json({ message: "Failed to generate token" });
         }
-
         // Set the session expiration and save the token in the super admin's record
         superAdmin.sessionExpiration = new Date().getTime() + 12 * 60 * 60 * 1000;
         superAdmin.jwtadmintoken = userToken;
         await superAdmin.save();
-
         // Respond with success message and super admin details
         res.status(200).json({ message: "Successfully logged in as Super Admin", superadmin: superAdmin });
       }
@@ -87,8 +100,6 @@ router.post("/login", async (req, res) => {
     });
   }
 });
-
-
 // Super Admin can view all admins
 router.get("/admins", async (req, res) => {
   try {
@@ -98,7 +109,6 @@ router.get("/admins", async (req, res) => {
     res.status(500).json({ message: "Failed to fetch admins", error: error.message });
   }
 });
-
 // Super Admin can block/unblock admins
 router.post("/admins/:id/block", async (req, res) => {
   const {id}=req.params
