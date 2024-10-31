@@ -43,26 +43,43 @@ router.post("/signup", async (req, res) => {
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
+    // Find the super admin with the specified email and role
     const superAdmin = await AdminPanel.findOne({ adminemail: email, role: 'superadmin' });
     if (!superAdmin) {
-      return res.status(401).json({ message: "Super Admin not found" });
+      return res.status(401).json({ message: "Super Admin not found", userstatus: 0 });
     }
 
+    // Verify the super admin’s account status
+    if (!superAdmin.isverified) {
+      return res.status(401).json({ message: "Super Admin is not verified" });
+    }
+
+    // Check if the provided password matches the stored password
     const isMatch = await bcrypt.compare(password, superAdmin.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Incorrect password" });
     }
 
-    const userToken = jwt.sign(
-      { id: superAdmin._id, role: 'superadmin' },
+    // Generate a JWT token for the super admin
+    jwt.sign(
+      { id: superAdmin._id, role: "superadmin" }, // Add role to the token payload
       secretIDSuperAdmin,
-      { expiresIn: '12h' }
+      { expiresIn: '12h' }, // Token expiration time
+      async (err, userToken) => {
+        if (err) {
+          console.log("error", err);
+          return res.status(500).json({ message: "Failed to generate token" });
+        }
+
+        // Set the session expiration and save the token in the super admin's record
+        superAdmin.sessionExpiration = new Date().getTime() + 12 * 60 * 60 * 1000;
+        superAdmin.jwtadmintoken = userToken;
+        await superAdmin.save();
+
+        // Respond with success message and super admin details
+        res.status(200).json({ message: "Successfully logged in as Super Admin", superadmin: superAdmin });
+      }
     );
-
-    superAdmin.jwtadmintoken = userToken;
-    await superAdmin.save();
-
-    res.status(200).json({ message: "Successfully logged in as Super Admin", superAdmin });
   } catch (error) {
     res.status(500).json({
       message: "Failed to log in Super Admin",
@@ -70,6 +87,7 @@ router.post("/login", async (req, res) => {
     });
   }
 });
+
 
 // Super Admin can view all admins
 router.get("/admins", async (req, res) => {
@@ -82,42 +100,44 @@ router.get("/admins", async (req, res) => {
 });
 
 // Super Admin can block/unblock admins
-router.patch("/admins/:id/block", async (req, res) => {
+router.post("/admins/:id/block", async (req, res) => {
+  const {id}=req.params
   try {
-    const admin = await AdminPanel.findById(req.params.id);
+    const admin = await AdminPanel.findById(id);
     if (!admin) {
       return res.status(404).json({ message: "Admin not found" });
     }
-
     admin.isBlocked = !admin.isBlocked; // Toggle block status
     await admin.save();
-    res.status(200).json({ message: `Admin ${admin.isBlocked ? 'blocked' : 'unblocked'} successfully`, admin });
+    res.status(200).json({ message: `Admin ${admin.isBlocked ? 'blocked' : 'unblocked'} successfully`,admin: admin });
   } catch (error) {
     res.status(500).json({ message: "Failed to update admin status", error: error.message });
   }
 });
 
 // Super Admin can view all products for a specific admin
-router.get("/products/:adminId", async (req, res) => {
+router.get("/products/:id", async (req, res) => {
+const {id}=req.params;
   try {
-    const products = await Product.find({ admin: req.params.adminId }); // Filter by adminId
+    const products = await Product.find({ admin: id }); // Filter by adminId
     if (products.length === 0) {
       return res.status(404).json({ message: "No products found for this admin" });
     }
-    res.status(200).json(products);
+    res.status(200).json({products:products});
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch products", error: error.message });
   }
 });
 
 // Super Admin can view all orders for a specific admin
-router.get("/orders/:adminId", async (req, res) => {
+router.get("/orders/:id", async (req, res) => {
+  const {id}=req.params;
   try {
-    const orders = await Order.find({ admin: req.params.adminId }); // Filter by adminId
+    const orders = await Order.find({adminId:id}); // Filter by adminId
     if (orders.length === 0) {
       return res.status(404).json({ message: "No orders found for this admin" });
     }
-    res.status(200).json(orders);
+    res.status(200).json({message:"order fetch success", orders:orders});
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch orders", error: error.message });
   }

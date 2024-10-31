@@ -8,12 +8,16 @@ const secretIDAdmin = process.env.secret_ID_Admin;
 router.post("/login", async (req, res) => {
   console.log(req.body);
   const { email, password } = req.body;
+
   try {
     const admin = await AdminPanel.findOne({ adminemail: email,  });
     if (!admin) {
       return res
         .status(401)
         .json({ message: "Admin not found", userstatus: 0 });
+    }
+    if (admin.isBlocked) {
+      return res.status(403).json({ message: "Access denied. Admin is blocked." });
     }
     if (!admin.isverified) {
       return res.status(401).json({ message: "Admin is not verified" });
