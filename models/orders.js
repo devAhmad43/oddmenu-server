@@ -14,7 +14,7 @@ let orderSchema = mongoose.Schema({
     type: String,
   },
   tableNumber:{
-    type:Number
+    type:Number 
   },
   price: {
     type: String,

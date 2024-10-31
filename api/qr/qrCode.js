@@ -1,20 +1,30 @@
 const express = require('express');
-const QRCodeModel = require('../../models/qrCode'); // Import your QRCode Mongoose model
+const QRCodeModel = require('../../models/qrCode'); // Update the path as necessary
 const router = express.Router();
 
-// POST route to generate and store a QR Code
+// POST route to generate and store a QR Code for both categories
 router.post('/generateQRCode', async (req, res) => {
-  const { admin, tableNumber, qrCodeUrl } = req.body;
+  const { admin, tableNumber, qrCodeUrl, category } = req.body;
   try {
-    // Create a new QR Code document and save to the database
-    const newQRCode = new QRCodeModel({
-      adminId: admin, // Admin ID passed from the request
-      tableNumber: tableNumber, // Table number
-      qrCodeUrl: qrCodeUrl, // Generated QR Code image URL from Cloudinary
-    });
-    await newQRCode.save(); // Save the QR code to the database
+    // Validate category input
+    if (!category || !['general', 'table'].includes(category)) {
+      return res.status(400).json({ message: 'Invalid category. Must be either "general" or "table"' });
+    }
+    // Check if tableNumber is required for 'table' category
+    if (category === 'table' && !tableNumber) {
+      return res.status(400).json({ message: 'Table number is required for "table" category' });
+    }
 
-    // Respond with the generated QR code URL
+    // Create a new QR Code document and save it to the database
+    const newQRCode = new QRCodeModel({
+      adminId: admin,
+      tableNumber: category === 'table' ? tableNumber : null,
+      qrCodeUrl,
+      category,
+    });
+    
+    await newQRCode.save();
+
     res.status(200).json({ qrCodeUrl });
   } catch (error) {
     console.error('QR Code generation failed:', error);
@@ -24,38 +34,43 @@ router.post('/generateQRCode', async (req, res) => {
 
 // GET route to retrieve all QR Codes for a specific admin from the database
 router.get('/getQRCode/:adminId', async (req, res) => {
-  const { adminId } = req.params; // Get adminId from the request parameters
+  const { adminId } = req.params;
+
   try {
-    // Find all QR code documents based on adminId
-    const qrCodeData = await QRCodeModel.find({ adminId: adminId });
+    const qrCodeData = await QRCodeModel.find({ adminId });
     if (qrCodeData.length === 0) {
       return res.status(404).json({ message: 'No QR Codes found for the provided adminId' });
     }
-    // If found, send the QR code data
-    res.status(200).json(qrCodeData); // Send all QR code data
+
+    res.status(200).json(qrCodeData);
   } catch (error) {
     console.error('Failed to retrieve QR Codes:', error);
     res.status(500).json({ message: 'Failed to retrieve QR Codes', error });
   }
 });
-// DELETE route to delete a specific QR Code by adminId and tableNumber
-router.delete('/deleteQRCode/:adminId/:tableNumber', async (req, res) => {
-  const { adminId, tableNumber } = req.params; // Get adminId and tableNumber from request parameters
+
+// DELETE route to delete a specific QR Code by adminId and identifier (tableNumber or 'general')
+router.delete('/deleteQRCode/:adminId/:identifier', async (req, res) => {
+  const { adminId, identifier } = req.params;
+
   try {
-    // Find and delete the QR Code document based on adminId and tableNumber
-    const deletedQRCode = await QRCodeModel.findOneAndDelete({ adminId: adminId, tableNumber: tableNumber });
+    let deletedQRCode;
+
+    if (identifier === 'general') {
+      deletedQRCode = await QRCodeModel.findOneAndDelete({ adminId, category: 'general' });
+    } else {
+      deletedQRCode = await QRCodeModel.findOneAndDelete({ adminId, tableNumber: identifier, category: 'table' });
+    }
 
     if (!deletedQRCode) {
       return res.status(404).json({ message: 'QR Code not found' });
     }
 
-    // If the deletion was successful, send a success message
     res.status(200).json({ message: 'QR Code deleted successfully' });
   } catch (error) {
     console.error('Failed to delete QR Code:', error);
     res.status(500).json({ message: 'Failed to delete QR Code', error });
   }
 });
-
 
 module.exports = router;

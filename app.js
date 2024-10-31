@@ -13,6 +13,10 @@ const adminRouter = require('./api/admin/admin');
 const productRouter = require('./api/products/products');
 const orders = require('./api/order/order')
 const qrCode=require('./api/qr/qrCode')
+const categoryRoutes = require("./api/category/category"); // Adjust the path as needed
+const logoRouter= require('./api/logo/logo');
+const themeRouter=require('./api/theme/theme')
+const superAdmin=require('./api/SuperAdmin/superadmin')
 const session = require('express-session');
 const uri = process.env.Mongoo_URI;
 const cookieParser = require('cookie-parser');
@@ -46,11 +50,13 @@ app.use('/api/product', productRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/order', orders);
 app.use('/api/qr', qrCode);
-
+app.use('/api/superadmin',superAdmin)
+app.use("/api/categories", categoryRoutes);
+app.use('/api/logo', logoRouter)
+app.use('/api/theme', themeRouter)
 app.get('/', async (req, res) => {
   res.json({ message: `server is running at ${PORT}` })
 })
-
 connectDB().then(() => {
 
   app.listen(PORT, () => {

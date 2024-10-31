@@ -10,7 +10,15 @@ const AdminPanelSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-   
+    role: {
+    type: String,
+    enum: ["admin", "superadmin"], // Define the roles
+    default: "admin",              // Default is admin
+  },
+    isBlocked: {
+        type: Boolean,
+        default: false,                // Super admin can toggle this
+      },
     isverified: {
         type: Boolean,
        default:false,

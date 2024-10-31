@@ -1,22 +1,12 @@
 const mongoose = require('mongoose');
-const qrCodeSchema = new mongoose.Schema({
-  adminId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'AdminPanel', // Reference to the Admin
-    required: true,
-  },
-  tableNumber: {
-    type: Number,
-    required: true,
-  },
-  qrCodeUrl: {
-    type: String, // Store the base64 URL of the QR code
-    required: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  }
-});
 
-module.exports = mongoose.model('QRCode', qrCodeSchema);
+const qrCodeSchema = new mongoose.Schema({
+  adminId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  tableNumber: { type: String, required: false },
+  qrCodeUrl: { type: String, required: true },
+  category: { type: String, enum: ['general', 'table'], required: true },
+}, { timestamps: true });
+
+const QRCodeModel = mongoose.model('QRCode', qrCodeSchema);
+
+module.exports = QRCodeModel;
