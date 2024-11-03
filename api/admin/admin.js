@@ -3,12 +3,10 @@ const router = express.Router();
 const AdminPanel = require("../../models/adminModel");
 const jwt = require("jsonwebtoken");
 const secretIDAdmin = process.env.secret_ID_Admin;
-
 // Admin Login
 router.post("/login", async (req, res) => {
   console.log(req.body);
   const { email, password } = req.body;
-
   try {
     const admin = await AdminPanel.findOne({ adminemail: email,  });
     if (!admin) {
@@ -25,7 +23,6 @@ router.post("/login", async (req, res) => {
     if (admin.password !== password) {
       return res.status(401).json({ message: "Incorrect password" });
     }
-
     jwt.sign(
       { id: admin._id, role: "admin" }, // Add role to the token payload
       secretIDAdmin,
@@ -50,7 +47,6 @@ router.post("/login", async (req, res) => {
     });
   }
 });
-
 // Admin Signup
 router.post("/signup", async (req, res) => {
   const { email, password } = req.body;
@@ -60,7 +56,6 @@ router.post("/signup", async (req, res) => {
     if (existingAdmin) {
       return res.status(401).json({ message: "Admin already exists" });
     }
-
     const newAdmin = new AdminPanel({
       adminemail: email,
       password: password,

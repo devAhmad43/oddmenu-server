@@ -17,7 +17,6 @@ router.post("/signup", async (req, res) => {
     if (existingSuperAdmin) {
       return res.status(401).json({ message: "Super Admin already exists" });
     }
-
     // Hash the password and create a new super admin record
     const hashedPassword = await bcrypt.hash(password, 10);
     const newSuperAdmin = new AdminPanel({
@@ -41,6 +40,7 @@ router.post("/signup", async (req, res) => {
         // Set session expiration and save the token in the super admin's record
         newSuperAdmin.sessionExpiration = new Date().getTime() + 12 * 60 * 60 * 1000;
         newSuperAdmin.jwtadmintoken = userToken;
+        console.log("LOGINtoken", userToken)
         await newSuperAdmin.save();
 
         // Respond with success message and new super admin details
@@ -48,6 +48,7 @@ router.post("/signup", async (req, res) => {
       }
     );
   } catch (error) {
+    console.log("eror",error)
     res.status(500).json({
       message: "Failed to sign up Super Admin",
       error: error.message,
@@ -88,6 +89,7 @@ router.post("/login", async (req, res) => {
         // Set the session expiration and save the token in the super admin's record
         superAdmin.sessionExpiration = new Date().getTime() + 12 * 60 * 60 * 1000;
         superAdmin.jwtadmintoken = userToken;
+        console.log("LOGINtoken", userToken)
         await superAdmin.save();
         // Respond with success message and super admin details
         res.status(200).json({ message: "Successfully logged in as Super Admin", superadmin: superAdmin });
