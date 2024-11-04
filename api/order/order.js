@@ -5,7 +5,7 @@ const Product = require("../../models/products");
 ///////////////////// /api/order/foodorder/////////////////////
 router.post("/productorder", async (req, res) => {
   const { adminId, product, price, noofitems, table, status } = req.body;
-  console.log(req.body,"ordersssss")
+  console.log(req.body,"ordersssss");
   try {
     const order = new FoodOrder({
       adminId: adminId, // Admin ID from the request

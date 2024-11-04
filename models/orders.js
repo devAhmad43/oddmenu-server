@@ -9,6 +9,10 @@ let orderSchema = mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId, // Reference to Product collection
       ref: 'Product',
     },
+    quantity: {
+      type: Number, // Store the quantity of the product
+      required: true,
+    }
   }],
   noofitems: {
     type: String,
